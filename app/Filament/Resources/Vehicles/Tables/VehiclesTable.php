@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\Vehicles\Tables;
 
+use App\Actions\DeleteVehicleAction;
 use App\Enums\VehicleAvailabilityStatus;
 use App\Enums\VehicleCategory;
 use App\Enums\VehicleFuelType;
+use App\Exceptions\VehicleHasRentalContractsException;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -133,7 +135,36 @@ class VehiclesTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->action(function ($records) {
+                            $action = app(DeleteVehicleAction::class);
+                            $failed = 0;
+                            $success = 0;
+
+                            foreach ($records as $record) {
+                                try {
+                                    $action->execute($record);
+                                    $success++;
+                                } catch (VehicleHasRentalContractsException $e) {
+                                    $failed++;
+
+                                    Notification::make()
+                                        ->danger()
+                                        ->title("Cannot Delete: {$record->registration_number}")
+                                        ->body($e->getMessage())
+                                        ->duration(5000)
+                                        ->send();
+                                }
+                            }
+
+                            if ($success > 0) {
+                                Notification::make()
+                                    ->success()
+                                    ->title("Deleted {$success} vehicle(s)")
+                                    ->duration(5000)
+                                    ->send();
+                            }
+                        }),
                 ]),
             ]);
     }

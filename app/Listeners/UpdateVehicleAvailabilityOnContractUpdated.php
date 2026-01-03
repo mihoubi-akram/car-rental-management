@@ -4,9 +4,11 @@ namespace App\Listeners;
 
 use App\Events\RentalContractUpdated;
 use App\Models\Vehicle;
+use Illuminate\Events\Attributes\ListensTo;
 
 class UpdateVehicleAvailabilityOnContractUpdated
 {
+    #[ListensTo(RentalContractUpdated::class)]
     public function handle(RentalContractUpdated $event): void
     {
         $contract = $event->contract;
@@ -14,17 +16,12 @@ class UpdateVehicleAvailabilityOnContractUpdated
 
         // If vehicle changed, update both old and new vehicle status
         if (isset($originalData['vehicle_id']) && $originalData['vehicle_id'] !== $contract->vehicle_id) {
-            // Update old vehicle status
             $oldVehicle = Vehicle::find($originalData['vehicle_id']);
-            if ($oldVehicle) {
-                $oldVehicle->updateAvailabilityStatus();
-            }
+            $oldVehicle?->updateAvailabilityStatus();
 
-            // Update new vehicle status
-            $contract->vehicle->updateAvailabilityStatus();
+            $contract->vehicle?->updateAvailabilityStatus();
         } else {
-            // Just update current vehicle status
-            $contract->vehicle->updateAvailabilityStatus();
+            $contract->vehicle?->updateAvailabilityStatus();
         }
     }
 }

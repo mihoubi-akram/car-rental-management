@@ -14,24 +14,27 @@ class EditRentalContract extends EditRecord
 {
     protected static string $resource = RentalContractResource::class;
 
-    public function __construct(
-        protected UpdateRentalContractAction $updateAction,
-        protected DeleteRentalContractAction $deleteAction
-    ) {
-        parent::__construct();
-    }
-
     protected function getHeaderActions(): array
     {
         return [
             ViewAction::make(),
             DeleteAction::make()
-                ->using(fn ($record) => $this->deleteAction->execute($record)),
+                ->using(fn ($record) => app(DeleteRentalContractAction::class)->execute($record)),
         ];
     }
 
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
-        return $this->updateAction->execute($record, $data);
+        return app(UpdateRentalContractAction::class)->execute($record, $data);
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+
+    protected function getDeleteRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
     }
 }

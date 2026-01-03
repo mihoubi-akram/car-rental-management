@@ -11,13 +11,8 @@ class CreateRentalContract extends CreateRecord
 {
     protected static string $resource = RentalContractResource::class;
 
-    public function __construct(protected CreateRentalContractAction $createAction)
-    {
-        parent::__construct();
-    }
-
     protected function handleRecordCreation(array $data): Model
     {
-        return $this->createAction->execute($data);
+        return app(CreateRentalContractAction::class)->execute($data);
     }
 }

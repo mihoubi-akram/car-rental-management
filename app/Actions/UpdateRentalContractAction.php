@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\RentalContractStatus;
 use App\Enums\VehicleAvailabilityStatus;
 use App\Events\RentalContractUpdated;
 use App\Exceptions\VehicleInMaintenanceException;
@@ -9,12 +10,12 @@ use App\Exceptions\VehicleNotAvailableException;
 use App\Models\RentalContract;
 use App\Models\Vehicle;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class UpdateRentalContractAction
 {
     public function execute(RentalContract $contract, array $data): RentalContract
     {
-        // Store original data for event
         $originalData = $contract->only(['vehicle_id', 'start_date', 'end_date', 'status']);
 
         // Recalculate totals if dates or rate changed
@@ -37,7 +38,6 @@ class UpdateRentalContractAction
             $startDate = Carbon::parse($data['start_date'] ?? $contract->start_date);
             $endDate = Carbon::parse($data['end_date'] ?? $contract->end_date);
 
-            // Check if vehicle is in maintenance
             if ($vehicle->availability_status === VehicleAvailabilityStatus::Maintenance) {
                 throw new VehicleInMaintenanceException;
             }
@@ -48,13 +48,12 @@ class UpdateRentalContractAction
             }
         }
 
-        // Update the contract
-        $contract->update($data);
+        return DB::transaction(function () use ($contract, $data, $originalData) {
+            $contract->update($data);
+            event(new RentalContractUpdated($contract, $originalData));
 
-        // Dispatch event for side effects
-        event(new RentalContractUpdated($contract, $originalData));
-
-        return $contract->fresh();
+            return $contract->fresh();
+        });
     }
 
     protected function isAvailableForUpdate(Vehicle $vehicle, Carbon $startDate, Carbon $endDate, int $excludeContractId): bool
@@ -65,7 +64,7 @@ class UpdateRentalContractAction
 
         $hasOverlap = $vehicle->rentalContracts()
             ->where('id', '!=', $excludeContractId) // Exclude current contract
-            ->whereIn('status', ['active', 'pending'])
+            ->whereIn('status', [RentalContractStatus::Active, RentalContractStatus::Pending])
             ->where(function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('start_date', [$startDate, $endDate])
                     ->orWhereBetween('end_date', [$startDate, $endDate])
