@@ -25,6 +25,7 @@ class VehiclesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->with('brand'))
             ->columns([
                 TextColumn::make('brand.name')
                     ->searchable()
