@@ -127,7 +127,7 @@ class VehicleForm
                         Select::make('availability_status')
                             ->required()
                             ->options(VehicleAvailabilityStatus::class)
-                            ->default('available'),
+                            ->default(VehicleAvailabilityStatus::Available->value),
 
                         Toggle::make('is_active')
                             ->label('Active')

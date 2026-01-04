@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RentalContractStatus;
 use App\Enums\VehicleAvailabilityStatus;
 use App\Enums\VehicleCategory;
 use App\Enums\VehicleFuelType;
@@ -69,7 +70,7 @@ class Vehicle extends Model
         }
 
         $hasOverlap = $this->rentalContracts()
-            ->whereIn('status', ['active', 'pending'])
+            ->whereIn('status', [RentalContractStatus::Active, RentalContractStatus::Pending])
             ->where(function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('start_date', [$startDate, $endDate])
                     ->orWhereBetween('end_date', [$startDate, $endDate])
@@ -95,7 +96,7 @@ class Vehicle extends Model
     public function hasActiveContract(): bool
     {
         return $this->rentalContracts()
-            ->whereIn('status', ['active', 'pending'])
+            ->whereIn('status', [RentalContractStatus::Active, RentalContractStatus::Pending])
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
             ->exists();

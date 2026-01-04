@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RentalContractStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -40,7 +41,7 @@ class Client extends Model
     public function hasActiveRentals(): bool
     {
         return $this->rentalContracts()
-            ->whereIn('status', ['active', 'pending'])
+            ->whereIn('status', [RentalContractStatus::Active, RentalContractStatus::Pending])
             ->exists();
     }
 

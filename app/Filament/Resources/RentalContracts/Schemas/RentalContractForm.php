@@ -34,7 +34,7 @@ class RentalContractForm
                         Select::make('status')
                             ->options(RentalContractStatus::class)
                             ->required()
-                            ->default('pending'),
+                            ->default(RentalContractStatus::Pending->value),
 
                         Select::make('client_id')
                             ->relationship('client', 'email')
