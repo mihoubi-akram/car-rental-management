@@ -3,10 +3,11 @@
 namespace App\Events;
 
 use App\Models\RentalContract;
+use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class RentalContractUpdated
+class RentalContractUpdated implements ShouldDispatchAfterCommit
 {
     use Dispatchable, SerializesModels;
 
